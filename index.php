@@ -5,10 +5,23 @@ define("DB_PASSWORD",'12345');
 define("DB_NAME","CRUD");
 $connection = mysqli_connect(HOST,DB_USER,DB_PASSWORD,DB_NAME);
 
-if(isset($_GET['delete'])){
-    $id = $_GET['delete'];
-    mysqli_query($connection,"DELETE FROM crud_table WHERE id=$id");
-    header("location: index.php");
+if(isset($_GET['action'])){
+   switch ($_GET['action']){
+       case 'delete': {
+           $obj = unserialize(urldecode($_GET['obj']));
+           $obj->delete();
+           break;
+       }
+       case 'edit': {
+           $obj = unserialize(urldecode($_GET['obj']));
+           $obj->edit();
+           break;
+       }
+       case 'create': {
+           User::create();
+           break;
+       }
+   }
 }
 if(isset($_POST['add'])){
     $email = $_POST['email'];
@@ -18,6 +31,7 @@ if(isset($_POST['add'])){
 
 }
 class User{
+
     private $id,$email,$pass,$time;
     static function array_input($_arr){
         $obj = new User();
@@ -34,14 +48,30 @@ class User{
         $obj ->time = $_time;
         return $obj;
     }
+    private function obj_url(){
+        return urlencode(serialize($this));
+    }
     public function output(){
         echo "<td>{$this->email}</td><td>{$this->pass}</td><td>{$this->time}</td><td></td>";
     }
-    public function edit(){
-        echo "<td><a href='edit.php?edit={$this->id}' class='edit'>EDIT</a></td>";
+    public function edit_button(){
+        $uri = "index.php?action=edit&obj={$this->obj_url()}";
+        echo "<td><a href=$uri class='edit'>EDIT</a></td>";
+    }
+    public function delete_button(){
+        $uri = "index.php?action=delete&obj={$this->obj_url()}";
+        echo "<td><a href=$uri class='delete'>DELETE</a></td>";
     }
     public function delete(){
-        echo "<td><a href='index.php?delete={$this->id}' class='delete'>DELETE</a></td>";
+        $connection = mysqli_connect(HOST,DB_USER,DB_PASSWORD,DB_NAME);
+        mysqli_query($connection,"DELETE FROM crud_table WHERE id=$this->id");
+        header("location: index.php");
+    }
+    public function edit(){
+        header("location: edit.php?id={$this->id}&email={$this->email}&pass={$this->pass}");
+    }
+    static function create(){
+        header("location: edit.php");
     }
 }
 
@@ -58,13 +88,14 @@ $response = mysqli_query($connection,"SELECT * FROM `CRUD_table`");
 </head>
 <body>
 <div>
-    <form action="index.php" method="POST">
-        <label>email</label>
-        <input type="email" name="email" >
-        <label >password</label>
-        <input type="password" name="pass" >
-        <input type="submit" name="add" value="ADD">
-    </form>
+<!--    <form action="index.php" method="POST">-->
+<!--        <label>email</label>-->
+<!--        <input type="email" name="email" >-->
+<!--        <label >password</label>-->
+<!--        <input type="password" name="pass" >-->
+<!--        <input type="submit" name="add" value="ADD">-->
+<!--    </form>-->
+    <a href="index.php?action=create">CREATE</a>
 </div>
 <div>
 <table class="info">
@@ -72,7 +103,7 @@ $response = mysqli_query($connection,"SELECT * FROM `CRUD_table`");
     while($input = mysqli_fetch_assoc($response)):
         $u = User::array_input($input);?>
     <tr>
-        <?php $u->output();$u->edit();$u->delete();?>
+        <?php $u->output();$u->edit_button();$u->delete_button();?>
     </tr>
     <?php endwhile;?>
 

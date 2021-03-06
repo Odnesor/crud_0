@@ -42,7 +42,7 @@ if(isset($_POST['edit'])){
     $email = $_POST['email'];
     $pass = $_POST['pass'];
     $unique_check = mysqli_query($connection,"SELECT * FROM crud_table WHERE email='$email'");
-    if($old_email && mysqli_num_rows($unique_check) > 0){
+    if($email!=$old_email && mysqli_num_rows($unique_check) > 0){
         header("location: edit.php?id={$id}&email={$old_email}&pass={$pass}&warning=2");
     }else {
         $pass = md5($pass);

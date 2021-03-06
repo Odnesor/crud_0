@@ -37,12 +37,15 @@ if(isset($_POST['create'])){
     }
 }
 if(isset($_POST['edit'])){
+    $id = $_POST['id'];
+    $old_email=$_POST['old_email'];
     $email = $_POST['email'];
+    $pass = $_POST['pass'];
     $unique_check = mysqli_query($connection,"SELECT * FROM crud_table WHERE email='$email'");
-    if($email!=$_POST['old_email'] && mysqli_num_rows($unique_check) > 0){
-        header("location: edit.php?warning=2");
+    if($old_email && mysqli_num_rows($unique_check) > 0){
+        header("location: edit.php?id={$id}&email={$old_email}&pass={$pass}&warning=2");
     }else {
-        $pass = md5($_POST['pass']);
+        $pass = md5($pass);
         date_default_timezone_set('UTC');
         $time = date("H:i:s d-m-Y");
         $id = $_POST['id'];
